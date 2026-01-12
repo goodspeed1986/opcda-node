@@ -1,0 +1,81 @@
+name: Build OPCDA Node Addon (Windows)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  release:
+    types: [ published ]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js (v20)
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Setup Python 3.11 (for node-gyp)
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+        cache-dependency-path: '**/requirements.txt'  # If any; optional
+
+    - name: Install Windows Build Tools (VS + Python)
+      run: |
+        npm install -g windows-build-tools --vs2019  # Includes VS 2019 Build Tools
+      env:
+        VCTargetsPath: "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\Common7\\Tools\\../../VC/7/Auxiliary/Build/"
+
+    - name: Install dependencies
+      run: |
+        npm ci
+
+    - name: Install OPC Core Components (if possible; optional, may fail if MSI download issues)
+      run: |
+        # Download and install OPC Core Components 3.0+ MSI (silent)
+        Invoke-WebRequest -Uri "https://opcconnect.opcfoundation.org/Downloads/OPCFoundation/CoreComponents/v3.00.0351/OPC_Core_Components_v3.00.0351_x64.msi" -OutFile "opc.msi"
+        Start-Process msiexec.exe -ArgumentList '/i opc.msi /quiet /qn /norestart' -Wait -NoNewWindow
+      shell: pwsh
+      continue-on-error: true  # If download fails, proceed (manual install needed for full test)
+
+    - name: Build addon (.node)
+      run: |
+        npm run build
+      env:
+        # Fix for /HIGHENTROPYVA:NO (from binding.gyp)
+        VCTargetsPath: "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\Common7\\Tools\\../../VC/7/Auxiliary/Build/"
+
+    - name: Test build (optional, if index.js runs without OPC server)
+      run: |
+        node index.js
+      continue-on-error: true  # Skip if no OPC server
+
+    - name: Upload .node artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: opcda-windows-node
+        path: |
+          build/Release/opcda.node
+          index.js
+          package.json
+        retention-days: 30
+
+    - name: Create release asset (if release)
+      if: github.event_name == 'release'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: build/Release/opcda.node
+        asset_name: opcda-win-x64.node
+        asset_content_type: application/octet-stream

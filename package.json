@@ -1,0 +1,31 @@
+{
+  "name": "opcda-node",
+  "version": "2.0.0",
+  "description": "OPC DA 2.0 wrapper for Node.js using N-API",
+  "main": "index.js",
+  "scripts": {
+    "test": "node index.js",
+    "build": "node-gyp rebuild",
+    "install": "npm install && npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/goodspeed1986/opcda-node.git"
+  },
+  "keywords": [
+    "opc",
+    "da",
+    "plc",
+    "napi",
+    "x64"
+  ],
+  "author": "goodspeed1986",
+  "license": "MIT",
+  "gypfile": true,
+  "dependencies": {
+    "bindings": "^1.5.0",
+    "node-addon-api": "^8.5.0",
+    "node-api-headers": "^1.7.0",
+    "node-gyp": "^11.5.0"
+  }
+}
