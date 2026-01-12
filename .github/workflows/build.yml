@@ -27,22 +27,40 @@ jobs:
       with:
         python-version: '3.11'
 
+    - name: Install OPC Core Components from repo zip (early, before deps)
+      run: |
+        # Unzip OPC Core zip from repo
+        Expand-Archive -Path "OpcComponents/x64/OPC Core Components Redistributable (x64) 105.1.zip" -DestinationPath "OpcComponents/extracted" -Force
+        # Install MSI silent (prefer msiexec over setup.exe for automation)
+        $msiPath = "OpcComponents/extracted/OPC Core Components Redistributable (x64).msi"
+        if (Test-Path $msiPath) {
+          Start-Process msiexec.exe -ArgumentList "/i `"$msiPath`" /quiet /qn /norestart /log install.log" -Wait -NoNewWindow
+          Write-Output "OPC Core installed via MSI"
+        } else {
+          Write-Error "MSI not found in zip; trying setup.exe"
+          $setupPath = "OpcComponents/extracted/setup.exe"
+          if (Test-Path $setupPath) {
+            Start-Process $setupPath -ArgumentList "/S /v/qn REBOOT=ReallySuppress" -Wait -NoNewWindow
+          }
+        }
+        # Verify install (optional)
+        if (Test-Path "C:\Program Files (x64)\Common Files\OPC Foundation") {
+          Write-Output "OPC Core verified"
+        } else {
+          Write-Warning "OPC Core path not found; may need manual"
+        }
+      shell: pwsh
+      continue-on-error: true  # Proceed if install fails (headers may be partial)
+
     - name: Install dependencies
       run: npm ci
-
-    - name: Install OPC Core Components (optional)
-      run: |
-        Invoke-WebRequest -Uri "https://opcconnect.opcfoundation.org/Downloads/OPCFoundation/CoreComponents/v3.00.0351/OPC_Core_Components_v3.00.0351_x64.msi" -OutFile "opc.msi"
-        Start-Process msiexec.exe -ArgumentList '/i opc.msi /quiet /qn /norestart' -Wait -NoNewWindow
-      shell: pwsh
-      continue-on-error: true
 
     - name: Build addon (.node)
       run: node-gyp rebuild
       shell: pwsh
       env:
         VCTargetsPath: "C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\Enterprise\\Common7\\Tools\\../../VC/Auxiliary/Build/"
-        npm_config_nodedir: ${{ env.NVM_DIR }}/v${{ steps.setup-node.outputs.node-version }}  # Node include paths
+        npm_config_nodedir: ${{ env.NVM_DIR }}/v${{ steps.setup-node.outputs.node-version }}
 
     - name: Test build (optional)
       run: node index.js

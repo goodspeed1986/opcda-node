@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 #include <algorithm>  // Для std::find
+#include <windows.h>  // For rpc.h, ole2.h if not pulled by opcda.h
+#include <objbase.h>  // COM init
 #include "OPCClientToolKit.h"  // Assume: COPCClient, COPCGroup, OnDisconnectCb, etc.
 
 using Napi::CallbackInfo;

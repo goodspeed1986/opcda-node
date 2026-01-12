@@ -2,30 +2,37 @@
   "targets": [
     {
       "target_name": "opcda",
-      "sources": [ "src/opcda.cc" ],
+      "sources": [ "src/opcda.cpp" ],
       "include_dirs": [
         "include",
         "<!@(node -p \"require('node-addon-api').include\")",
-        "<!@(node -p \"require('node-addon-api').include_dir\")"
+        "<!@(node -p \"require('node-addon-api').include_dir\")",
+        "<!(node -p \"process.env.NODEROOT + '/include/node'\")"  // Raw N-API from Node
       ],
       "dependencies": [
         "<!(node -p \"require('node-addon-api').gyp\")"
       ],
-      "cflags": [ "-std=c++17" ],
+      "cflags_cc": [ "-std=c++17" ],
       "conditions": [
         ['OS=="win"', {
           "msvs_settings": {
             "VCCLCompilerTool": {
               "ExceptionHandling": "2",
-              "DisableSpecificWarnings": [ "4530", "4506", "4996" ],
-              "AdditionalOptions": [ "/std:c++17" ]
+              "DisableSpecificWarnings": [ "4530", "4506", "4996", "6386" ],
+              "AdditionalOptions": [ "/std:c++17", "/EHsc" ]
             },
             "VCLinkerTool": {
               "AdditionalOptions": [ "/HIGHENTROPYVA:NO" ],
-              "AdditionalDependencies": [ "OPCClientToolKit64.lib" ],
+              "AdditionalDependencies": [ 
+                "OPCClientToolKit64.lib",
+                "ole32.lib",  // COM runtime
+                "oleaut32.lib",
+                "rpcrt4.lib"
+              ],
               "AdditionalLibraryDirectories": [ "lib/x64" ]
             }
-          }
+          },
+          "defines": [ "_CRT_SECURE_NO_WARNINGS" ]  // Suppress MSVC warnings
         }]
       ],
       "libraries": [ "lib/x64/OPCClientToolKit64.lib" ]
