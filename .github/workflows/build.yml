@@ -30,7 +30,7 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
-    - name: Install OPC Core Components (optional, may fail if MSI download issues)
+    - name: Install OPC Core Components (optional)
       run: |
         Invoke-WebRequest -Uri "https://opcconnect.opcfoundation.org/Downloads/OPCFoundation/CoreComponents/v3.00.0351/OPC_Core_Components_v3.00.0351_x64.msi" -OutFile "opc.msi"
         Start-Process msiexec.exe -ArgumentList '/i opc.msi /quiet /qn /norestart' -Wait -NoNewWindow
@@ -38,12 +38,13 @@ jobs:
       continue-on-error: true
 
     - name: Build addon (.node)
-      run: node-gyp rebuild  # Direct call, без npm run (избегает скрипта)
-      shell: pwsh  # PowerShell для стабильного PATH
+      run: node-gyp rebuild
+      shell: pwsh
       env:
         VCTargetsPath: "C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\Enterprise\\Common7\\Tools\\../../VC/Auxiliary/Build/"
+        npm_config_nodedir: ${{ env.NVM_DIR }}/v${{ steps.setup-node.outputs.node-version }}  # Node include paths
 
-    - name: Test build (optional, if index.js runs without OPC server)
+    - name: Test build (optional)
       run: node index.js
       continue-on-error: true
 
