@@ -7,7 +7,7 @@
         "include",
         "<!@(node -p \"require('node-addon-api').include\")",
         "<!@(node -p \"require('node-addon-api').include_dir\")",
-        "<!(node -p \"process.env.NODEROOT + '/include/node'\")"  // Raw N-API from Node
+        "<!(node -p \"process.env.npm_config_nodedir + '/include/node'\")"
       ],
       "dependencies": [
         "<!(node -p \"require('node-addon-api').gyp\")"
@@ -25,14 +25,14 @@
               "AdditionalOptions": [ "/HIGHENTROPYVA:NO" ],
               "AdditionalDependencies": [ 
                 "OPCClientToolKit64.lib",
-                "ole32.lib",  // COM runtime
+                "ole32.lib",
                 "oleaut32.lib",
                 "rpcrt4.lib"
               ],
               "AdditionalLibraryDirectories": [ "lib/x64" ]
             }
           },
-          "defines": [ "_CRT_SECURE_NO_WARNINGS" ]  // Suppress MSVC warnings
+          "defines": [ "_CRT_SECURE_NO_WARNINGS" ]
         }]
       ],
       "libraries": [ "lib/x64/OPCClientToolKit64.lib" ]
