@@ -23,10 +23,10 @@
   "engines": {
     "node": ">=18"
   },
-  "os": ["win32"],
   "dependencies": {
     "bindings": "^1.5.0",
-    "node-addon-api": "^8.5.0"
+    "node-addon-api": "^8.5.0",
+    "node-api-headers": "^1.7.0"
   },
   "devDependencies": {
     "node-gyp": "^11.5.0"
