@@ -2,7 +2,7 @@
   "targets": [
     {
       "target_name": "opcda",
-      "sources": [ "src/opcda.cpp" ],
+      "sources": [ "src/opcda.cc" ],
       "include_dirs": [ "include", "<!(node -p \"require('node-addon-api').include\")" ],
       "dependencies": [ "<!(node -p \"require('node-addon-api').gyp\")" ],
       "conditions": [
